@@ -18,6 +18,13 @@ import random
 import game
 import util
 
+class RandomAgent(game.Agent):
+    "An agent that turns left at every opportunity"
+
+    def getAction(self, state):
+        legal = state.getLegalPacmanActions()
+        return random.choice(legal)
+
 class LeftTurnAgent(game.Agent):
     "An agent that turns left at every opportunity"
 

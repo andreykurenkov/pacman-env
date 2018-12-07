@@ -587,8 +587,7 @@ def lookup(name, namespace):
         modules = [obj for obj in namespace.values() if str(type(obj)) == "<type 'module'>"]
         options = [getattr(module, name) for module in modules if name in dir(module)]
         options += [obj[1] for obj in namespace.items() if obj[0] == name ]
-        if len(options) == 1: return options[0]
-        if len(options) > 1: raise Exception, 'Name conflict for %s'
+        if len(options) >= 1: return options[0]
         raise Exception, '%s not found as a method or class' % name
 
 def pause():

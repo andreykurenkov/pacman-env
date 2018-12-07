@@ -5,7 +5,7 @@ import numpy as np
 import time
 from game import Directions, Game
 from ghostAgents import RandomGhost
-from pacmanAgents import LeftTurnAgent
+from pacmanAgents import RandomAgent, LeftTurnAgent, GreedyAgent
 from graphicsDisplay import PacmanGraphics as VizGraphics
 from textDisplay import PacmanGraphics as TextGraphics
 from pacman import GameState, ClassicGameRules
@@ -221,16 +221,25 @@ if __name__ == '__main__':
     ghosts = []
     for i in range(2):
         ghosts.append(RandomGhost(i+1))
-    display = VizGraphics(includeInfoPane=False, zoom=0.5)
-    #display = TextGraphics(display_rate = 1, draw_end = True)
+    #display = VizGraphics(includeInfoPane=False, zoom=0.5)
+    display = TextGraphics(draw_end = True)
     env = PacmanEnv(medium_layout, ghosts, display)
     env.reset()
     
     state = env.game.state
+    #pacman = RandomAgent()
     pacman = LeftTurnAgent()
-    for i in range(1000):
+    #pacman = GreedyAgent()
+    totals = []
+    total = 0
+    games = 0
+    while games<100:
         obs, reward, done, info = env.step(pacman.getAction(state))
-
+        total+=reward
         if done:
+            totals.append(total)
+            total = 0
+            games+=1
             env.reset()
         state = env.game.state
+    print(totals)
