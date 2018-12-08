@@ -4,7 +4,7 @@ import random
 import numpy as np
 import time
 from game import Directions, Game
-from ghostAgents import RandomGhost
+from ghostAgents import RandomGhost, DirectionalGhost
 from pacmanAgents import RandomAgent, LeftTurnAgent, GreedyAgent
 from graphicsDisplay import PacmanGraphics as VizGraphics
 from textDisplay import PacmanGraphics as TextGraphics
@@ -133,18 +133,16 @@ class PacmanEnv(gym.Env):
         if isinstance(action, int):
             action = self.action_set[action]
         legal = self.game.getState().getLegalActions(0)
-        reward = None
         if action not in legal:
             action = Directions.STOP
         self.game.do_one_move(action)
         done = self.game.gameOver
-        if done:
-            return None, 0, True, None
         state = self.game.getState()
         observation = self._display.getArray(state)
         new_score = self.game.getScore()
-        if reward is None:
-            reward = new_score - self.current_score
+        reward = new_score - self.current_score
+        if done:
+            return None, reward, True, None
         self.current_score = new_score
         info = {'state': state}
         return observation, reward, done, info
@@ -220,21 +218,25 @@ if __name__ == '__main__':
     medium_layout = layout.getLayout('originalClassic')
     ghosts = []
     for i in range(2):
-        ghosts.append(RandomGhost(i+1))
-    #display = VizGraphics(includeInfoPane=False, zoom=0.5)
+        ghosts.append(DirectionalGhost(i+1))
+    #display = VizGraphics(includeInfoPane=False, zoom=1)
     display = TextGraphics(draw_end = True)
     env = PacmanEnv(medium_layout, ghosts, display)
     env.reset()
     
     state = env.game.state
-    #pacman = RandomAgent()
-    pacman = LeftTurnAgent()
+    pacman = RandomAgent(onlyLegal = False)
+    #pacman = LeftTurnAgent()
     #pacman = GreedyAgent()
     totals = []
     total = 0
     games = 0
-    while games<100:
+    while games < 100:
         obs, reward, done, info = env.step(pacman.getAction(state))
+        if reward>0:
+            reward*=0.9
+        else:
+            reward*=1.1
         total+=reward
         if done:
             totals.append(total)

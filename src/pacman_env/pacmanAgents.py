@@ -21,9 +21,19 @@ import util
 class RandomAgent(game.Agent):
     "An agent that turns left at every opportunity"
 
+    def __init__(self, onlyLegal=True):
+        self.onlyLegal = onlyLegal
+
     def getAction(self, state):
-        legal = state.getLegalPacmanActions()
-        return random.choice(legal)
+        if self.onlyLegal:
+            legal = state.getLegalPacmanActions()
+            return random.choice(legal)
+        else:
+            return random.choice([Directions.NORTH,
+                                  Directions.SOUTH,
+                                  Directions.EAST,
+                                  Directions.WEST,
+                                  Directions.STOP])
 
 class LeftTurnAgent(game.Agent):
     "An agent that turns left at every opportunity"
