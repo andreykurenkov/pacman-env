@@ -88,7 +88,7 @@ class PacmanEnv(gym.Env):
 
     metadata = {'render.modes': ['rgb_array','ansi']}
 
-    def __init__(self, layout, ghosts, display, timeout=30, percentRandomize=0.5):
+    def __init__(self, layout, ghosts, display, timeout=30, percentRandomize=0.5, teacherAgents = []):
         import __main__
         __main__.__dict__['_display'] = display
         self._rules = ClassicGameRules(timeout)
@@ -102,7 +102,7 @@ class PacmanEnv(gym.Env):
                            Directions.SOUTH, 
                            Directions.EAST, 
                            Directions.WEST, 
-                           Directions.STOP]
+                           Directions.STOP] + teacherAgents
         self.action_space = spaces.Discrete(len(self.action_set))
 
         self.width = layout.width
@@ -130,8 +130,13 @@ class PacmanEnv(gym.Env):
             done (boolean): whether the episode has ended, in which case further step() calls will return undefined results
             info (dict): contains auxiliary diagnostic information (helpful for debugging, and sometimes learning)
         """
+        self.real_action = None
         if isinstance(action, int):
+            if action > 4:
+                self.real_action = action
             action = self.action_set[action]
+        if not isinstance(action, str):
+            action = action.getAction(self.game.getState())
         legal = self.game.getState().getLegalActions(0)
         reward = None
         if action not in legal:
@@ -146,8 +151,14 @@ class PacmanEnv(gym.Env):
         if reward is None:
             reward = new_score - self.current_score
         self.current_score = new_score
-        info = {'state': state}
-        return observation, reward, done, info
+
+        if self.real_action!=None:
+            self.real_reward = reward
+            if reward > 0:
+                reward = reward * 0.9
+            else:
+                reward = reward * 1.1
+        return observation, reward, done, None
 
     def reset(self):
         """Resets the state of the environment and returns an initial observation.
