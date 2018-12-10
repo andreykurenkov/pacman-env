@@ -8,6 +8,7 @@ from ghostAgents import RandomGhost, DirectionalGhost
 from pacmanAgents import RandomAgent, LeftTurnAgent, GreedyAgent
 from graphicsDisplay import PacmanGraphics as VizGraphics
 from textDisplay import PacmanGraphics as TextGraphics
+from matrixDisplay import PacmanGraphics as MatrixGraphics
 from pacman import GameState, ClassicGameRules
 
 RGB = 'rgb'
@@ -86,7 +87,7 @@ class EnvGame(Game):
 
 class PacmanEnv(gym.Env):
 
-    metadata = {'render.modes': ['rgb_array','ansi']}
+    metadata = {'render.modes': ['rgb_array','ansi','matrix']}
 
     def __init__(self, layout, ghosts, display, timeout=30, percentRandomize=0.5, teacherAgents = []):
         import __main__
@@ -96,7 +97,14 @@ class PacmanEnv(gym.Env):
         self._ghosts = ghosts
         self._display = display
         self._percentRandomize = percentRandomize
-        self._obs_type = 'rgb_array' if isinstance(display, VizGraphics) else 'ansi'
+        if isinstance(display, VizGraphics):
+            self._obs_type = 'rgb_array' 
+        elif isinstance(display, TextGraphics):
+            self._obs_type = 'ansi'
+        elif isinstance(display, MatrixGraphics):
+            self._obs_type = 'matrix'
+        else:
+            raise ValueError('Invalid display arg!')
 
         self.action_set = [Directions.NORTH, 
                            Directions.SOUTH, 
@@ -109,6 +117,8 @@ class PacmanEnv(gym.Env):
         self.height = layout.height
         if self._obs_type == 'ansi':
             self.observation_space = spaces.Box(low=0, high=255, shape=(self.width, self.height), dtype=np.uint8)
+        elif self._obs_type == 'matrix':
+            self.observation_space = spaces.Box(low=0, high=1, shape=(self.width, self.height, display.NUM_CHANNELS), dtype=np.uint8)
         elif self._obs_type == 'rgb_array':
             (screen_width,screen_height) = display.get_size(self.width, self.height)
             self.observation_space = spaces.Box(low=0, high=255, shape=(int(screen_height), int(screen_width), 3), dtype=np.uint8)
@@ -232,6 +242,7 @@ if __name__ == '__main__':
         ghosts.append(DirectionalGhost(i+1))
     #display = VizGraphics(includeInfoPane=False, zoom=1)
     display = TextGraphics(draw_end = True)
+    #display = MatrixGraphics(medium_layout)
     env = PacmanEnv(medium_layout, ghosts, display)
     env.reset()
     
