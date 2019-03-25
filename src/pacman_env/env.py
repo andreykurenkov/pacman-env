@@ -7,7 +7,9 @@ from game import Directions, Game
 from ghostAgents import RandomGhost, DirectionalGhost
 from pacmanAgents import RandomAgent, LeftTurnAgent, GreedyAgent
 from graphicsDisplay import PacmanGraphics as VizGraphics
-from textDisplay import PacPosGraphics as TextGraphics
+from textDisplay import PacPosGraphics as PacPosGraphics
+from textDisplay import PacmanGraphics as TextGraphics
+from matrixDisplay import PacmanGraphics as MatrixGraphics
 from pacman import GameState, ClassicGameRules
 
 RGB = 'rgb'
@@ -86,7 +88,7 @@ class EnvGame(Game):
 
 class PacmanEnv(gym.Env):
 
-    metadata = {'render.modes': ['rgb_array','ansi']}
+    metadata = {'render.modes': ['rgb_array','ansi','matrix','pos']}
 
     def __init__(self, layout, ghosts, display, timeout=30, percentRandomize=0.5):
         import __main__
@@ -96,7 +98,16 @@ class PacmanEnv(gym.Env):
         self._ghosts = ghosts
         self._display = display
         self._percentRandomize = percentRandomize
-        self._obs_type = 'rgb_array' if isinstance(display, VizGraphics) else 'ansi'
+        if isinstance(display, VizGraphics):
+            self._obs_type = 'rgb_array' 
+        elif isinstance(display, TextGraphics):
+            self._obs_type = 'ansi'
+        elif isinstance(display, MatrixGraphics):
+            self._obs_type = 'matrix'
+        elif  isinstance(display, PacPosGraphics):
+            self._obs_type = 'pos'
+        else:
+            raise ValueError('Invalid display arg!')
 
         self.action_set = [Directions.NORTH, 
                            Directions.SOUTH, 
@@ -109,6 +120,10 @@ class PacmanEnv(gym.Env):
         self.height = layout.height
         if self._obs_type == 'ansi':
             self.observation_space = spaces.Box(low=0, high=255, shape=(self.width, self.height), dtype=np.uint8)
+        elif self._obs_type == 'pos':
+            self.observation_space = spaces.Box(low=0, high=255, shape=(2,), dtype=np.uint8)
+        elif self._obs_type == 'matrix':
+            self.observation_space = spaces.Box(low=0, high=1, shape=(self.width, self.height, display.NUM_CHANNELS), dtype=np.uint8)
         elif self._obs_type == 'rgb_array':
             (screen_width,screen_height) = display.get_size(self.width, self.height)
             self.observation_space = spaces.Box(low=0, high=255, shape=(int(screen_height), int(screen_width), 3), dtype=np.uint8)
@@ -130,6 +145,7 @@ class PacmanEnv(gym.Env):
             done (boolean): whether the episode has ended, in which case further step() calls will return undefined results
             info (dict): contains auxiliary diagnostic information (helpful for debugging, and sometimes learning)
         """
+        info = {}
         if isinstance(action, int):
             action = self.action_set[action]
         legal = self.game.getState().getLegalActions(0)
@@ -142,9 +158,9 @@ class PacmanEnv(gym.Env):
         new_score = self.game.getScore()
         reward = new_score - self.current_score
         if done:
-            return None, reward, True, None
+            return observation, reward, True, info
         self.current_score = new_score
-        info = {'state': state}
+
         return observation, reward, done, info
 
     def reset(self):
@@ -218,7 +234,7 @@ if __name__ == '__main__':
     learn_layout = layout.getLayout('learnGrid')
     ghosts = []
     #display = VizGraphics(includeInfoPane=False, zoom=1)
-    display = TextGraphics(draw_end = True)
+    display = PacPosGraphics()
     env = PacmanEnv(learn_layout, ghosts, display)
     env.reset()
     
