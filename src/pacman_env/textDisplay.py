@@ -79,3 +79,31 @@ class PacmanGraphics:
         
     def finish(self):
         pass
+        
+class PacPosGraphics:
+    def __init__(self, speed=None, display_rate = -1, draw_end = False):
+        if speed != None:
+            global SLEEP_TIME
+            SLEEP_TIME = speed
+        self.display_rate = display_rate
+        self.draw_end = draw_end
+
+    def initialize(self, state, isBlue = False):
+        self.pause()
+        self.turn = 0
+        self.agentCounter = 0
+
+    def update(self, state):
+        pass
+
+    def pause(self):
+        time.sleep(SLEEP_TIME)
+
+    def draw(self, state):
+        print state.agentStates[0].pos
+                           
+    def getArray(self, state):
+        return state.agentStates[0].pos
+        
+    def finish(self):
+        pass

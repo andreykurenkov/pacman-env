@@ -7,7 +7,7 @@ from game import Directions, Game
 from ghostAgents import RandomGhost, DirectionalGhost
 from pacmanAgents import RandomAgent, LeftTurnAgent, GreedyAgent
 from graphicsDisplay import PacmanGraphics as VizGraphics
-from textDisplay import PacmanGraphics as TextGraphics
+from textDisplay import PacPosGraphics as TextGraphics
 from pacman import GameState, ClassicGameRules
 
 RGB = 'rgb'
@@ -215,13 +215,11 @@ class PacmanEnv(gym.Env):
         
 if __name__ == '__main__':
     import layout
-    medium_layout = layout.getLayout('originalClassic')
+    learn_layout = layout.getLayout('learnGrid')
     ghosts = []
-    for i in range(2):
-        ghosts.append(DirectionalGhost(i+1))
     #display = VizGraphics(includeInfoPane=False, zoom=1)
     display = TextGraphics(draw_end = True)
-    env = PacmanEnv(medium_layout, ghosts, display)
+    env = PacmanEnv(learn_layout, ghosts, display)
     env.reset()
     
     state = env.game.state
@@ -233,6 +231,7 @@ if __name__ == '__main__':
     games = 0
     while games < 100:
         obs, reward, done, info = env.step(pacman.getAction(state))
+        print(obs)
         if reward>0:
             reward*=0.9
         else:

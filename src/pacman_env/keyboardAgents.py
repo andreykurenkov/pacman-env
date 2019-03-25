@@ -28,8 +28,9 @@ class KeyboardAgent(Agent):
     STOP_KEY = 'q'
 
     def __init__( self, index = 0 ):
-
         self.lastMove = Directions.STOP
+        if index == {}:
+            index = 0
         self.index = index
         self.keys = []
 
